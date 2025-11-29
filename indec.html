@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Registro de Gastos</title>
 
-  <!-- Firebase COMPAT -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -16,107 +16,120 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body {
-      font-family: Arial;
-      padding: 20px;
-      max-width: 600px;
-      margin: auto;
-      background: #f7eceb;
+    /* --- PALETA --- */
+    :root {
+      --fondo: #e6d5ce;
+      --panel: #f2e7e3;
+      --rosado: #c38b7b;
+      --marron: #6b564f;
+      --texto: #4b403c;
     }
+
+    body {
+      font-family: "Arial", sans-serif;
+      padding: 20px;
+      background: var(--fondo);
+      color: var(--texto);
+      margin: auto;
+      max-width: 500px;
+    }
+
     h2, h3 {
       text-align: center;
-      color: #8b4a44;
+      color: var(--marron);
+      font-weight: 700;
     }
+
     .card {
-      background: #fff;
-      border-radius: 15px;
+      background: var(--panel);
       padding: 15px;
-      margin-bottom: 18px;
-      box-shadow: 0 3px 7px rgba(0,0,0,0.12);
+      border-radius: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
     }
+
     input, select {
       width: 100%;
       padding: 12px;
-      margin-bottom: 12px;
-      border-radius: 10px;
-      border: 1px solid #d4b4b0;
-      font-size: 15px;
-      background: #fff8f7;
+      border: 1px solid #bfaeaa;
+      border-radius: 15px;
+      margin-bottom: 10px;
+      background: #fff;
     }
+
     button {
-      background: #b57b7b;
-      color: white;
-      padding: 12px;
       width: 100%;
+      padding: 12px;
+      margin-top: 10px;
       border: none;
       border-radius: 20px;
+      background: var(--rosado);
+      color: white;
       font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      cursor: pointer;
     }
+
     button:hover {
-      background: #8b4a44;
+      background: #a66c5e;
     }
-    .nav-buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .nav-buttons button {
-      flex: 1;
-      min-width: 110px;
-      max-width: 150px;
-      padding: 10px;
-      border-radius: 25px;
-    }
+
+    /* Lista de Gastos */
     .item {
-      padding: 12px;
-      background: #fff7f6;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
     }
-    .item-info {
-      max-width: 80%;
-      font-size: 14px;
+
+    .item-info small {
+      color: #6d5b55;
     }
-    .delete-btn {
-      background: transparent;
+
+    /* Botón eliminar */
+    .btn-delete {
+      background: none;
       border: none;
       cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .delete-btn img {
-      width: 28px;
+
+    .btn-delete img {
+      width: 20px;
+      opacity: 0.8;
     }
+
+    .btn-delete:hover img {
+      opacity: 1;
+    }
+
+    /* Total */
     .total-box {
+      background: #dcd1cc;
       padding: 15px;
-      background: #e6f8e6;
-      border-radius: 12px;
-      font-weight: bold;
-      margin-top: 10px;
+      border-radius: 15px;
       text-align: center;
-      color: #2f6b2f;
+      font-weight: bold;
+      margin-top: 15px;
     }
   </style>
 </head>
+
 <body>
 
   <h2>Registro de Gastos</h2>
 
-  <!-- Navegación -->
-  <div class="nav-buttons">
-    <button onclick="mostrarSeccion('gastos')">Lista</button>
-    <button onclick="mostrarSeccion('graficos')">Gráficas</button>
-    <button onclick="mostrarSeccion('exportar')">Exportar</button>
-  </div>
-
-  <!-- SECCIÓN FORMULARIO -->
-  <div id="gastos" class="seccion card">
+  <!-- FORMULARIO -->
+  <div class="card">
     <label>Descripción:</label>
     <input id="descripcion" type="text" />
 
@@ -137,209 +150,150 @@
     </select>
 
     <button onclick="agregarGasto()">Agregar</button>
-
-    <h3>Gastos Guardados</h3>
-    <div id="lista"></div>
-
-    <div class="total-box" id="totalBox">Total: S/ 0</div>
   </div>
 
-  <!-- SECCIÓN GRÁFICOS -->
-  <div id="graficos" class="seccion card" style="display:none;">
-    <h3>Gastos por Categoría (Barras)</h3>
-    <canvas id="graficoCategoria"></canvas>
-
-    <h3>Distribución (Pie)</h3>
-    <canvas id="graficoPie"></canvas>
-
-    <h3>Evolución de Gastos</h3>
-    <canvas id="graficoLinea"></canvas>
+  <!-- FILTROS -->
+  <h3>Filtros</h3>
+  <div class="card">
+    <label>Filtrar por categoría:</label>
+    <select id="filtroCategoria" onchange="cargarGastos()">
+      <option value="todos">Todos</option>
+      <option>Casa</option>
+      <option>Comida</option>
+      <option>Salidas</option>
+      <option>Importaciones</option>
+      <option>Apps</option>
+      <option>Entretenimiento</option>
+    </select>
   </div>
 
-  <!-- SECCIÓN EXPORTAR -->
-  <div id="exportar" class="seccion card" style="display:none;">
-    <button style="background:#2f7d32;" onclick="exportarExcel()">Exportar a Excel</button>
-  </div>
+  <!-- GASTOS -->
+  <h3>Gastos Guardados</h3>
+  <div id="lista"></div>
 
-<script>
-/* ---------------------- FIREBASE ---------------------- */
-const firebaseConfig = {
-  apiKey: "AIzaSyB3xqw4u56I5oS1cBXMm5OSZrE7QdN7g2Y",
-  authDomain: "gastospareja-c29c2.firebaseapp.com",
-  projectId: "gastospareja-c29c2",
-  storageBucket: "gastospareja-c29c2.appspot.com",
-  messagingSenderId: "409737003820",
-  appId: "1:409737003820:web:972ec80df04f44a230e289"
-};
+  <div class="total-box" id="totalBox">Total: S/ 0</div>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+  <!-- EXPORTAR -->
+  <button onclick="exportarExcel()" style="background:#7d9c63">Exportar a Excel</button>
 
-/* ---------------------- AGREGAR GASTO ---------------------- */
-async function agregarGasto() {
-  const descripcionInput = document.getElementById("descripcion").value;
-  const cuotasInput = document.getElementById("cuotas").value;
-  const costoInput = Number(document.getElementById("costo").value);
-  const categoriaInput = document.getElementById("categoria").value;
+  <!-- Firebase + Funciones -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB3xqw4u56I5oS1cBXMm5OSZrE7QdN7g2Y",
+      authDomain: "gastospareja-c29c2.firebaseapp.com",
+      projectId: "gastospareja-c29c2",
+      storageBucket: "gastospareja-c29c2.firebasestorage.app",
+      messagingSenderId: "409737003820",
+      appId: "1:409737003820:web:972ec80df04f44a230e289"
+    };
 
-  if (!descripcionInput || !cuotasInput || !costoInput) {
-    alert("Completa todos los campos");
-    return;
-  }
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  await db.collection("gastos").add({
-    descripcion: descripcionInput,
-    cuotas: Number(cuotasInput),
-    costo: costoInput,
-    categoria: categoriaInput,
-    fecha: new Date()
-  });
+    /* AGREGAR GASTO */
+    async function agregarGasto() {
+      const descripcion = document.getElementById("descripcion").value;
+      const cuotas = document.getElementById("cuotas").value;
+      const costo = Number(document.getElementById("costo").value);
+      const categoria = document.getElementById("categoria").value;
 
-  document.getElementById("descripcion").value = "";
-  document.getElementById("cuotas").value = "";
-  document.getElementById("costo").value = "";
+      if (!descripcion || !cuotas || !costo) {
+        alert("Completa todos los campos");
+        return;
+      }
 
-  cargarGastos();
-}
+      await db.collection("gastos").add({
+        descripcion,
+        cuotas: Number(cuotas),
+        costo,
+        categoria,
+        fecha: new Date().toLocaleString("es-PE")
+      });
 
-/* ---------------------- CARGAR GASTOS ---------------------- */
-async function cargarGastos() {
-  const lista = document.getElementById("lista");
-  lista.innerHTML = "";
+      document.getElementById("descripcion").value = "";
+      document.getElementById("cuotas").value = "";
+      document.getElementById("costo").value = "";
 
-  const snapshot = await db.collection("gastos").orderBy("fecha", "desc").get();
-
-  let total = 0;
-
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    total += d.costo;
-
-    lista.innerHTML += `
-      <div class="item">
-        <div class="item-info">
-          <strong>${d.descripcion}</strong><br>
-          Categoría: ${d.categoria}<br>
-          Cuotas: ${d.cuotas}<br>
-          Costo: S/ ${d.costo}<br>
-          Fecha: ${d.fecha?.toDate()?.toLocaleString() || '---'}
-        </div>
-        <button class="delete-btn" onclick="eliminarGasto('${doc.id}')">
-          <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png">
-        </button>
-      </div>
-    `;
-  });
-
-  document.getElementById("totalBox").innerText = "Total: S/ " + total;
-
-  generarGraficos(snapshot);
-}
-
-cargarGastos();
-
-/* ---------------------- ELIMINAR ---------------------- */
-async function eliminarGasto(id) {
-  await db.collection("gastos").doc(id).delete();
-  cargarGastos();
-}
-
-/* ---------------------- GRÁFICOS ---------------------- */
-let graficoBar, graficoPie, graficoLinea;
-
-function generarGraficos(snapshot) {
-  const categorias = {};
-  const fechas = {};
-
-  snapshot.forEach(doc => {
-    const d = doc.data();
-
-    // Categoría
-    categorias[d.categoria] = (categorias[d.categoria] || 0) + d.costo;
-
-    // Línea por fecha
-    const fecha = d.fecha.toDate().toLocaleDateString();
-    fechas[fecha] = (fechas[fecha] || 0) + d.costo;
-  });
-
-  /* ---- BARRAS ---- */
-  if (graficoBar) graficoBar.destroy();
-  graficoBar = new Chart(document.getElementById("graficoCategoria"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(categorias),
-      datasets: [{
-        label: "Soles",
-        data: Object.values(categorias)
-      }]
+      cargarGastos();
     }
-  });
 
-  /* ---- PIE ---- */
-  if (graficoPie) graficoPie.destroy();
-  graficoPie = new Chart(document.getElementById("graficoPie"), {
-    type: "pie",
-    data: {
-      labels: Object.keys(categorias),
-      datasets: [{
-        data: Object.values(categorias)
-      }]
+    /* ELIMINAR */
+    async function eliminarGasto(id) {
+      await db.collection("gastos").doc(id).delete();
+      cargarGastos();
     }
-  });
 
-  /* ---- LÍNEA ---- */
-  if (graficoLinea) graficoLinea.destroy();
-  graficoLinea = new Chart(document.getElementById("graficoLinea"), {
-    type: "line",
-    data: {
-      labels: Object.keys(fechas),
-      datasets: [{
-        label: "Gasto por día",
-        data: Object.values(fechas),
-        tension: 0.3
-      }]
+    /* CARGAR LISTA */
+    async function cargarGastos() {
+      const lista = document.getElementById("lista");
+      lista.innerHTML = "";
+
+      const filtro = document.getElementById("filtroCategoria").value;
+      let query = db.collection("gastos");
+
+      if (filtro !== "todos") {
+        query = query.where("categoria", "==", filtro);
+      }
+
+      const snapshot = await query.get();
+      let total = 0;
+
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        total += d.costo;
+
+        lista.innerHTML += `
+          <div class="item">
+            <div class="item-info">
+              <strong>${d.descripcion}</strong><br>
+              <small>${d.categoria} • Cuotas: ${d.cuotas}</small><br>
+              <small>📅 ${d.fecha}</small><br>
+              <strong>S/ ${d.costo}</strong>
+            </div>
+            <button class="btn-delete" onclick="eliminarGasto('${doc.id}')">
+              <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png">
+            </button>
+          </div>
+        `;
+      });
+
+      document.getElementById("totalBox").innerText = "Total: S/ " + total;
     }
-  });
-}
 
-/* ---------------------- EXPORTAR ---------------------- */
-async function exportarExcel() {
-  const snapshot = await db.collection("gastos").get();
-  const datos = [];
-  let total = 0;
+    cargarGastos();
 
-  snapshot.forEach(doc => {
-    const d = doc.data();
-    datos.push({
-      Descripción: d.descripcion,
-      Categoría: d.categoria,
-      Cuotas: d.cuotas,
-      Costo: d.costo,
-      Fecha: d.fecha.toDate().toLocaleString()
-    });
-    total += d.costo;
-  });
+    /* EXPORTAR */
+    async function exportarExcel() {
+      const snapshot = await db.collection("gastos").get();
+      const datos = [];
+      let total = 0;
 
-  datos.push({
-    Descripción: "TOTAL",
-    Categoría: "-",
-    Cuotas: "-",
-    Costo: total,
-    Fecha: "-"
-  });
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        datos.push({
+          Descripción: d.descripcion,
+          Categoría: d.categoria,
+          Cuotas: d.cuotas,
+          Costo: d.costo,
+          Fecha: d.fecha
+        });
+        total += d.costo;
+      });
 
-  const hoja = XLSX.utils.json_to_sheet(datos);
-  const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, hoja, "Gastos");
-  XLSX.writeFile(libro, "gastos.xlsx");
-}
+      datos.push({
+        Descripción: "TOTAL",
+        Categoría: "-",
+        Cuotas: "-",
+        Costo: total,
+        Fecha: "-"
+      });
 
-/* ---------------------- SECCIONES ---------------------- */
-function mostrarSeccion(id) {
-  document.querySelectorAll(".seccion").forEach(s => s.style.display = "none");
-  document.getElementById(id).style.display = "block";
-}
-</script>
+      const hoja = XLSX.utils.json_to_sheet(datos);
+      const libro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(libro, hoja, "Gastos");
+      XLSX.writeFile(libro, "gastos.xlsx");
+    }
+  </script>
 
 </body>
 </html>
